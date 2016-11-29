@@ -47,6 +47,9 @@ import rospy
 
 from dynamixel_driver.dynamixel_const import *
 
+from dynamixel_controllers.srv import SetAngleLimitCcw
+from dynamixel_controllers.srv import SetAngleLimitCw
+
 from dynamixel_controllers.srv import SetSpeed
 from dynamixel_controllers.srv import TorqueEnable
 from dynamixel_controllers.srv import SetComplianceSlope
@@ -79,6 +82,8 @@ class JointController:
         self.compliance_marigin_service = rospy.Service(self.controller_namespace + '/set_compliance_margin', SetComplianceMargin, self.process_set_compliance_margin)
         self.compliance_punch_service = rospy.Service(self.controller_namespace + '/set_compliance_punch', SetCompliancePunch, self.process_set_compliance_punch)
         self.torque_limit_service = rospy.Service(self.controller_namespace + '/set_torque_limit', SetTorqueLimit, self.process_set_torque_limit)
+        self.angle_limit_ccw_service = rospy.Service(self.controller_namespace + '/set_angle_limit_ccw', SetAngleLimitCcw, self.process_set_angle_limit_ccw)
+        self.angle_limit_cw_service = rospy.Service(self.controller_namespace + '/set_angle_limit_cw', SetAngleLimitCw, self.process_set_angle_limit_cw)
 
     def __ensure_limits(self):
         if self.compliance_slope is not None:
@@ -135,6 +140,12 @@ class JointController:
 
     def set_torque_limit(self, max_torque):
         raise NotImplementedError
+        
+    def set_angle_limit_ccw(self, max_angle_ccw):
+        raise NotImplementedError
+        
+    def set_angle_limit_cw(self, max_angle_cw):
+        raise NotImplementedError
 
     def process_set_speed(self, req):
         self.set_speed(req.speed)
@@ -158,6 +169,14 @@ class JointController:
 
     def process_set_torque_limit(self, req):
         self.set_torque_limit(req.torque_limit)
+        return []
+        
+    def process_set_angle_limit_ccw(self, req):
+        self.set_angle_limit_ccw(req.angle_limit_ccw)
+        return []
+        
+    def process_set_angle_limit_cw(self, req):
+        self.set_angle_limit_cw(req.angle_limit_cw)
         return []
 
     def process_motor_states(self, state_list):

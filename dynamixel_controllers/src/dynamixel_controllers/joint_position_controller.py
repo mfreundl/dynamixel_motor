@@ -45,6 +45,7 @@ __email__ = 'anton@email.arizona.edu'
 
 
 import rospy
+import numpy
 
 from dynamixel_driver.dynamixel_const import *
 from dynamixel_controllers.joint_controller import JointController
@@ -119,10 +120,11 @@ class JointPositionController(JointController):
         return self.rad_to_raw(pos_rad, self.initial_position_raw, self.flipped, self.ENCODER_TICKS_PER_RADIAN)
 
     def spd_rad_to_raw(self, spd_rad):
-        if spd_rad < self.MIN_VELOCITY: spd_rad = self.MIN_VELOCITY
-        elif spd_rad > self.joint_max_speed: spd_rad = self.joint_max_speed
+        sign = int(numpy.sign(spd_rad))
+        if numpy.abs(spd_rad) < self.MIN_VELOCITY: spd_rad = self.MIN_VELOCITY
+        elif numpy.abs(spd_rad) > self.joint_max_speed: spd_rad = self.joint_max_speed
         # velocity of 0 means maximum, make sure that doesn't happen
-        return max(1, int(round(spd_rad / self.VELOCITY_PER_TICK)))
+        return max(1, int(round(numpy.abs(spd_rad) / self.VELOCITY_PER_TICK)))*sign
 
     def set_torque_enable(self, torque_enable):
         mcv = (self.motor_id, torque_enable)
@@ -158,6 +160,16 @@ class JointPositionController(JointController):
         raw_torque_val = int(DXL_MAX_TORQUE_TICK * max_torque)
         mcv = (self.motor_id, raw_torque_val)
         self.dxl_io.set_multi_torque_limit([mcv])
+        
+    def set_angle_limit_ccw(self, max_angle_ccw):
+        if max_angle_ccw > 4095: max_angle_ccw = 4095
+        elif max_angle_ccw < 0: max_angle_ccw = 0
+        self.dxl_io.set_angle_limit_ccw(self.motor_id, max_angle_ccw)
+        
+    def set_angle_limit_cw(self, max_angle_cw):
+        if max_angle_cw > 4095: max_angle_cw = 4095
+        elif max_angle_cw < 0: max_angle_cw = 0
+        self.dxl_io.set_angle_limit_cw(self.motor_id, max_angle_cw)
 
     def set_acceleration_raw(self, acc):
         if acc < 0: acc = 0
